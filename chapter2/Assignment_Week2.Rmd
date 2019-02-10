@@ -1,0 +1,107 @@
+---
+title: "Week2 Assignment :- Movie review database"
+author: "Samriti Malhotra"
+date: "February 9, 2019"
+always_allow_html: yes
+output:
+  
+  html_document: default
+  pdf_document: default
+Partner: "Vishal Arora"
+---
+#Overview :-#
+The week 2 assignemnt requires to collect user reviews for movies . To constuct various tables 
+to store the user information, survey and movies information. So that some meanginfull inference can be deduced from them.
+
+##About Data : How the data is gathered and segeragated##
+The survey results below shows what  survey ratings provided by which user to which movie. Based on the survey rating data, we normalized the data tables and segeregated the data into different tables.
+```{r include=FALSE}
+library(DBI)
+library(RMySQL)
+library(ggplot2)
+library(readr)
+library(DT)
+library(RODBC)
+ 
+```
+
+##Data Dictionary##
+The various data survey elements corresponds to:-
+
+1) First & Last Name :- User first & last name who gave the survey.
+2) Age :- User age
+3) Gender :- user gender who took part in survey.
+4) columns 5,6,7,8,9, 10 :- are all movies for whom user filled out the survey.
+
+```{r warning = FALSE, message=FALSE}
+movies_survey <- read_csv("SurveyTemplate.csv")
+
+#View(movies_survey)
+DT::datatable(movies_survey , options = list(pageLength = 5))  
+
+```
+
+
+##Problem Statement##
+Data from survey is loaded into the database and then based on the normalization we segeregated the data into various tables.
+Below part of code shows how we can make native connection to DB using DBI and native DB libraries. Or else we can use the ODBC connection using RODBC bridge. Below both the techniques have been shown how they work in making the connection.
+
+###Establish connection using DBI and RMySQL libraries for native connection, fetching the list of tables in the movies_schema###
+```{r}
+con <- dbConnect(dbDriver('MySQL'),dbname="movies_sch",user="root",password="newrootpassword", port=3306, host="localhost")
+
+listTab <- dbListTables(con)
+
+listTab[1]
+#Movies
+dbReadTable(con,listTab[1])
+
+listTab[2]
+#Participants
+dbReadTable(con,listTab[2])
+
+
+listTab[3]
+#Rating
+dbReadTable(con,listTab[3])
+
+
+listTab[4]
+#SurveyTable
+dbReadTable(con,listTab[4])
+
+dbDisconnect(con)
+```
+### Establish connection using the RODBC librarymaking use of ODBC connection, and fetching the various datales data and writting query to fetch data from all tables based on join conditions.
+###Display the first 10 records using the head funtion.
+```{r}
+odbConn <- odbcConnect("odbcConn")
+
+
+
+sqlquery1 <- "SELECT participants.`First Name`, participants.`Gender` , rating.`Description` , rating.`RatingID` ,  movies.`Movie_Name` , movies.`Genre`   FROM surveytable LEFT JOIN  ( participants  , rating  , movies ) ON (participants.ID = surveytable.PersonID AND rating.RatingID = surveytable.RatingID AND movies.` ID` = surveytable.MovieID) order by participants.`First Name` , rating.`Description`"
+
+df_survey <- sqlQuery(odbConn, sqlquery1)
+
+head(df_survey , 10)
+
+
+```
+
+
+### Plot a diagram using the above data fetched from query to show the user preference for respective Genre's of movies.
+```{r}
+
+
+qplot(Genre, RatingID, data=df_survey,xlab = "Genre", ylab = "Rating", main = "Individual Movie Rating by Reviewer") + facet_wrap(~`First Name`+`Gender`) +  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+close(odbConn)
+```
+
+
+##Summary##
+We can infer from above plot that every user has thier own preference for Genre of movies.
+Like Laura & Elyse has more preference towards Romance Genre , and similarly Chris has more interest in Animation movies, whereas Thomas has more interest in Action movies. Jason and David have interest in varied genres. So now we can use this inference to present them movies in the genres which they prefer more.
+
+
+
+
