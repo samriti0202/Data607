@@ -1,0 +1,106 @@
+---
+title: "Week4_Project1"
+author: "Samriti Malhotra"
+date: "February 24, 2019"
+output:
+  html_document: default
+  pdf_document: default
+partner author: Vishal Arora
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+#Introduction#
+The problem statement is to have the raw data loaded from txt file into R dataframe. The ask from the problem is to give an output in CSV file which contains Player's Name, Player's State, Total Number of Points, Player's Pre-Rating, and Average Pre Chess Rating of Opponents.
+
+
+##Loading necessary libraries:- 
+'tidyr','dplyr','stringr','sqldf'
+```{r include=FALSE}
+library(tidyr)
+library(dplyr)
+library(stringr)
+library(sqldf)
+
+```
+
+
+##Solution to the problem ##
+First load the txt using the read delim method with sep='|' and you get the data loaded in dataframe . Use select function from tidyr package to select the df and limit the columns you want to retain for your dataframe.
+Using Filter function of dplyr package you filter out the rows which are unwanted, and then construct 2 different data frames from our original data frame.One containing the player(s) playing details mainly comprising of (Player name/Points/Rounds he played) and an additional fields names player id as primary key.
+Second dataframe contains the remaining information for that player e.g. (State,USCF code, pre-rating, post ratings and what was the color of the pieces s(he) played with) and again player_id as primaey key.
+
+
+```{r}
+my_data <- read.delim("tournamentinfo.txt" , header = FALSE ,  sep = "|" )
+glimpse(my_data)
+
+df <-  select(my_data , 1:10)
+
+df <- filter(df,!grepl(pattern = "[-]+" , V1)) %>%
+      dplyr::filter(row_number() > 2)  
+
+df_player_det <- df %>%
+        dplyr::filter(grepl(pattern = "[[:digit:]]", V1)) %>%
+        dplyr::mutate(player_id = row_number())
+
+df_player_rating <-  df %>%
+        dplyr::filter(grepl(pattern = "[[:alpha:]]", V1))  %>%
+        dplyr::mutate(player_id = row_number())
+
+```
+
+Next step is to seperate the joint values and spread the dataframe where ever possible e.g.
+seperating out USCF and Ratings fields and then again seperating out Pre-rating and Post-ratings for every player.
+Then we rearranged the Data frames by using select and having player_id as first column in both the new dataframes.Using the merge function of dplyr to merge both the dataframes inyo one dataframe.
+Next step we do is using select, mutate and str_extract functions we clean the value of pre-rating for each row and also give our dataframe columns a meaningfull name.
+```{r}
+
+rating <- separate( df_player_rating , V2 , c("USCF" , "Rtg") , sep = "R: ") 
+rating <- separate(rating , Rtg , c("PreRating" , "Postrating") , sep = "->" )
+
+df_player_det <- select(df_player_det, player_id, everything())
+df_player_rating <- select(rating ,  player_id , V1 , PreRating , Postrating)
+playerdet <- merge(df_player_det , df_player_rating , by="player_id")
+playerdet <- select(playerdet , 1:13 , -2 ) %>%
+              mutate(PreRating = str_extract(PreRating,"[:digit:]+") )
+colnames(playerdet) <- c("Player_ID", "Player Name", "Total Points", "Match1", "Match2", "Match3", "Match4", "Match5", "Match6", "Match7"  , "State" , "PreRating" )
+
+str(playerdet)
+
+```
+
+In the next steps using the gather function we expand the dataframe  in number of rows by having multiple rows for one player id i.e. by removing the round columns.
+Then arrange the rows by Player_ID and then using seperate function we again bifurcate a single column into multple column(s), in current scenario we bifurcate each round column into 2 columns and in last using transform we coonvert the data type of few columns.
+
+```{r include=FALSE}
+playerdet1 <- gather(playerdet , "Games" , "RoundData" , 4:10)
+playerdet1 <- arrange(playerdet1, Player_ID)
+playerdet1 <- separate( playerdet1 , RoundData , c("MatchType" , "OppID") ) 
+playerdet1 <- transform(playerdet1, OppID = as.integer(OppID) , PreRating = as.integer(PreRating) )
+ 
+```
+
+Lastly we use sqldf library to load the dataframe as table which gives us the facility of running sql queries against our sqldf dataframe to have 2 new dataframes constructed from our datafranme , one with al the details and one with only player_id and average opponent rating having group by on player_id gives us one row per player _id with average of all the opponent pre-ratings. 
+Using the merge function we merge the original dataframe before sqldf and the dataframe we got from using sqldf which contains the avereage of opponent ratings for each player.
+Using Select we construct our final dataframeand using write csv function we write our dataframe to comma seperated csv.
+```{r}
+data(playerdet1)
+
+temp <- sqldf("select a.Player_ID , (select PreRating from playerdet1 b where b.Player_ID = a.OppID ) Opp_rating  from playerdet1 a" )
+glimpse(temp)
+
+temp <- sqldf("select Player_ID , round(avg(Opp_rating)) 'Opponent Prerating' from temp group by Player_ID")
+head(temp)
+
+combinedDataSet <- merge(playerdet,temp, by="Player_ID")
+finalDataSet <- select(combinedDataSet, 2, 3,11,12,13, -1 )
+glimpse(finalDataSet)
+
+write.csv(finalDataSet,"Project2.csv",row.names=FALSE)
+```
+
+##Summary##
+This exercise helped us to use various packages of R e.g. dplyr,tidyr,stringr and sqldf through which we manipulated the dataframes thus achieving the target of cleaning/purging  data for visualisation.
+
