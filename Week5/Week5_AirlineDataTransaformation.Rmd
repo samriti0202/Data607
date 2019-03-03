@@ -1,0 +1,115 @@
+---
+title: "Week5 Assignment"
+author: "Samriti Malhotra"
+date: "March 2, 2019"
+output:
+  html_document: default
+  pdf_document: default
+partner author: Vishal Arora
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+#Introduction# 
+
+Data manipulation is one of the most important and critical part of Data Science.It is the 3rd step in the overall process of CRISP-DM.     
+
+>  *CRISP-DM*  :  **Cross Industry Standard Process for Data Mining.**
+
+Data preperation/manipulation is the process where data is rearranged, manipulated and prepared for the Analysis to be fed into Model.
+
+
+```{r include=FALSE}
+library(dplyr)
+library(tidyr)
+library(graphics)
+library(stringr)
+library(kableExtra)
+```
+
+##Problem statment##     
+We have been given data for 2 airlines which fly to certain cities with thier arrival times, whether OnTime or Delayed.Create a csv file with the data and  manipulate the data to do analysis and infer about the delay arrivals for both airlines and summarize the same at end.
+ 
+ 
+###Solution###
+
+The R packages used for the solution are as below.     
+* **dplyr**   
+* **tidyr**    
+* **stringr**    
+* **graphics**    
+* **kableExtra**   
+
+Using read.csv function we populated df_airlines from airlines csv.
+*KableExtra* package was used for styling the table to display the loaded airline data in tabular form. Gather funtion from tidyr package was used for transforming wide table structure to long table structure. We gathered coulmns "City" and "NoofTimes".  
+
+Next Using *arrange* function from  dplyr package,  we sorted data on column *'Airlines'*
+As analysis needs to done on   arrival delayed for both airlines for each city,using spread function from  *tidyr* package on the arrival column to get two different columns for Ontime and delayed .Using *mutate* function we added three new columns to the table one for percentage delayed , percentage of flights on Time and one for total number of flights.      
+
+All this functions gave as final table structure to draw analysis graphs.
+As graphs needs to be plotted for two different airlines we *subset* table for two airlines. Alaska and AM West.
+```{r message=FALSE, warning=FALSE, results='asis'}
+df_airline <- read.csv("airlines.csv",header = TRUE,sep=",")
+
+kable(df_airline) %>% 
+  kable_styling(bootstrap_options = c("striped","hover","condensed","responsive"),full_width   = F,position = "left",font_size = 12) %>%
+  row_spec(0, background ="gray") 
+
+longData <- gather(df_airline,"city","NoOfTimes", 3:7)
+longData <- arrange(longData,Airlines)
+finaltabDF <- spread(longData,Arrival,4)
+
+finaltabDF <- select(finaltabDF , 1:4 ) %>%
+              mutate(TotalPerRow = (Delayed + OnTime)) %>% 
+              mutate(PercDelayed = (Delayed/TotalPerRow)*100) %>%
+              mutate(PercOnTime = (OnTime/TotalPerRow)*100)
+
+finaltabDF <- select(finaltabDF,1:7,-5)
+alaskaDF <- subset(finaltabDF, finaltabDF$Airlines == 'Alaska')
+westDF <-  subset(finaltabDF, finaltabDF$Airlines == 'AM West')
+
+kable(finaltabDF) %>%
+  kable_styling(bootstrap_options = c("striped","hover","condensed","responsive"),full_width   = F,position = "left",font_size = 12) %>%
+  row_spec(0, background ="gray")
+
+```
+
+Using kable to have the sumamry for both airlines DF in table, but instead of displaying we used save_kable function to save the output in html format when the .Rmd file is run in R in the working directory.
+
+
+```{r}
+kable(summary(alaskaDF)) %>%
+  kable_styling(bootstrap_options = c("striped","condensed"),full_width = F,position =    
+  "left",font_size = 12) %>%
+  row_spec(0, background ="gray") %>%
+  save_kable(file = "SummaryForAlaskaAirlines.html", self_contained = T)
+
+kable(summary(westDF)) %>%
+  kable_styling(bootstrap_options = c("striped","condensed"),full_width = F,position =
+  "left",font_size = 12) %>%
+  row_spec(0, background ="gray") %>%
+  save_kable(file = "SummaryForAMWestAirlines.html", self_contained = T)
+
+```
+
+
+Using Barplot function bar graphs is plotted for two airlines (Alaska , MD West) for five diferent cites where percentage of delayed in on Y axis and cities on X axis. 
+
+```{r fig.cap="Fig1:Arrival delays in Percentage for both Airlines."}
+
+Val <-matrix(c(alaskaDF$PercDelayed,westDF$PercDelayed),nrow=2,ncol=5,byrow=TRUE)
+colnames(Val) <- alaskaDF$city
+
+barplot(Val,main="Alaska vs AM West Airlines", names.arg=c(alaskaDF$city),xlab="Cities", ylab="% Arrival Delay",beside=TRUE, col=c("Grey","cyan"))
+
+legend("topleft", c("Alaska","AM West"), fill = c("Grey","cyan"))
+```
+
+
+##Summary##
+
+By Looking at the summary for both the Alaska & AM West airlines dataframe(s) it is clearly visible that the mean %arrival delay for Alsaka airline is less that AM West airline.
+This is also clearly visible from the Bar chart drawn above where we can visually compare that the  % arrival delay  for both airlines for each city and we can safely conclude that AM West airline has more delays compared Alaska airline..
