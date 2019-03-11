@@ -1,0 +1,54 @@
+Region,City
+NORTHEAST,Albany
+SOUTHEAST,Atlanta
+MIDSOUTH,BaltimoreWashington
+WEST,Boise
+NORTHEAST,Boston
+NORTHEAST,BuffaloRochester
+GREAT LAKES,Charlotte
+GREAT LAKES,Chicago
+GREAT LAKES,CincinnatiDayton
+GREAT LAKES,Columbus
+SOUTH CENTRAL,DallasFtWorth
+WEST,Denver
+GREAT LAKES,Detroit
+GREAT LAKES,GrandRapids
+NORTHEAST,HarrisburgScranton
+GREAT LAKES,HartfordSpringfield
+SOUTH CENTRAL,Houston
+GREAT LAKES,Indianapolis
+SOUTHEAST,Jacksonville
+WEST,LasVegas
+CALIFORNIA,LosAngeles
+MIDSOUTH,Louisville
+SOUTHEAST,MiamiFtLauderdale
+MIDSOUTH,Nashville
+SOUTH CENTRAL,NewOrleansMobile
+NORTHEAST,NewYork
+NORTHEAST,NorthernNewEngland
+SOUTHEAST,Orlando
+NORTHEAST,Philadelphia
+WEST,Phoenix/Tucson
+NORTHEAST,Pittsburgh 
+WEST,Portland
+MIDSOUTH,RaleighGreensboro
+MIDSOUTH,RichmondNorfolk
+MIDSOUTH,Roanoke
+CALIFORNIA,Sacramento
+CALIFORNIA,SanDiego
+CALIFORNIA,SanFrancisco
+WEST,Seattle
+SOUTHEAST,SouthCarolina
+WEST,Spokane
+PLAINS REGION,StLouis
+NORTHEAST,Syracuse
+SOUTHEAST,Tampa
+WEST,West Tex/NewMexico
+CALIFORNIA,CALIFORNIA
+GREAT LAKES,GREATLAKES
+MIDSOUTH,MIDSOUTH
+NORTHEAST,NORTHEAST
+PLAINS REGION,PLAINS
+SOUTH CENTRAL,SOUTHCENTRAL
+SOUTHEAST,SOUTHEAST
+WEST,WEST
