@@ -139,15 +139,27 @@ $(document).ready(function () {
 </div>
 <div id="solution--" class="section level2">
 <h2>Solution :-</h2>
-<p>We are using below libraries in our ques to resolve the above problem.:-</p>
+<p>We are using below libraries in our quest to resolve the above problem.:- <em>readxl</em><br />
+<em>dplyr</em><br />
+<em>kableExtra</em><br />
+<em>sqldf</em><br />
+<em>stringr</em><br />
+<em>ggplot2</em></p>
 <ol style="list-style-type: decimal">
-<li>Using the list.files method of readxl library , we are loading all the excel(s) in the folder with pattern “.xls” and using sapply function to read all files and bind_rows function add the file name to each row using name <strong>“City”</strong></li>
-<li>Using read.csv function we are loading another file region_city.csv which contains the city and to which region those city belongs information.</li>
-<li>Then we exclude the unwanted columns from the first Data frame using select method of dplyr and apply mutate on that data frame to get the name of the city by removing the ‘.xls’ and unwanted characters from the city name.</li>
-<li>Using mutate we add a new column(Total Sales) which is the average price * total volume for that city.</li>
-<li>Using the sqldf , we then combine the 2 data frames based on the city , now the new Data frame has everything including the region to which the city belongs.</li>
-<li>Then we query to get the region &amp; average Total Sales and group them by region.</li>
-<li>Using KappleExtra library we display a few of the records of the final Data frame to be used for our analysis in Graph.</li>
+<li>Using the list.files method of readxl library , we are loading all the excel(s) in the folder with pattern “.xls” and using sapply function to read all files and bind_rows function add the file name to each row using name <strong>“City”</strong><br />
+</li>
+<li>Using read.csv function we are loading another file region_city.csv which contains the city and to which region those city belongs information.<br />
+</li>
+<li>Then we exclude the unwanted columns from the first Data frame using select method of dplyr and apply mutate on that data frame to get the name of the city by removing the ‘.xls’ and unwanted characters from the city name.<br />
+</li>
+<li>Using mutate we add a new column(Total Sales) which is the average price * total volume for that city.<br />
+</li>
+<li>Using the sqldf , we then combine the 2 data frames based on the city , now the new Data frame has everything including the region to which the city belongs.<br />
+</li>
+<li>Then we query to get the region &amp; average Total Sales and group them by region.<br />
+</li>
+<li>Using KappleExtra library we display a few of the records of the final Data frame to be used for our analysis in Graph.<br />
+</li>
 <li>Using ggplot function of ggplot2 library we plot and show which region has the highest average total sales of Avacado .</li>
 </ol>
 <pre class="r"><code>files &lt;- list.files(pattern = &quot;*.xls&quot;)
@@ -499,7 +511,7 @@ SOUTHEAST
 </div>
 <div id="summary--" class="section level2">
 <h2>Summary :-</h2>
-<p>Using the graph we can clearly see that California region has the highest total sales of Avacado, followed by North East region anmd West region has the least consumption on avacado.</p>
+<p>Using the graph we can clearly see that California region has the highest total sales of Avacado, followed by North East region and West region has the least consumption on avacado.</p>
 </div>
 </div>
 

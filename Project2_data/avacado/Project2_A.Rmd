@@ -5,8 +5,8 @@ author:
 - name: Vishal Arora
 date: "March 10, 2019"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 ---
 
 #Introduction :-
@@ -21,7 +21,13 @@ This data set contains the avacado consumption of 30 cities throughout US, the d
 
 
 ##Solution :-
-We are using below libraries in our ques to resolve the above problem.:-
+We are using below libraries in our quest to resolve the above problem.:-
+*readxl*     
+*dplyr*     
+*kableExtra*       
+*sqldf*       
+*stringr*      
+*ggplot2*      
 ```{r include=FALSE}
 library(readxl)
 library(dplyr)
@@ -33,14 +39,14 @@ library(ggplot2)
 ```
 
 
-1) Using the list.files method of readxl library , we are loading all the excel(s) in the folder with pattern ".xls" and using sapply function to read all files and bind_rows function add the file name  to each row using name **"City"**
-2) Using read.csv function we are loading another file region_city.csv which contains the  city and to which region those city belongs information.
-3) Then we exclude the unwanted columns from the first Data frame using select method of dplyr and apply mutate on that data frame to get the name of the city by removing the '.xls' and unwanted characters from the city name.
-4) Using mutate we add a new column(Total Sales) which is the average price * total volume for that city.
-5) Using the sqldf , we then combine the 2 data frames based on the city , now the new Data frame has everything including the region to which the city belongs.
-6) Then we query to get the region & average Total Sales and group them by region.
-7) Using KappleExtra library we display a few of the records of the final Data frame to be used for our analysis in Graph.
-8) Using ggplot function of ggplot2 library we plot and show which region has the highest average total sales of Avacado .
+1) Using the list.files method of readxl library , we are loading all the excel(s) in the folder with pattern ".xls" and using sapply function to read all files and bind_rows function add the file name  to each row using name **"City"**       
+2) Using read.csv function we are loading another file region_city.csv which contains the  city and to which region those city belongs information.       
+3) Then we exclude the unwanted columns from the first Data frame using select method of dplyr and apply mutate on that data frame to get the name of     the city by removing the '.xls' and unwanted characters from the city name.          
+4) Using mutate we add a new column(Total Sales) which is the average price * total volume for that city.         
+5) Using the sqldf , we then combine the 2 data frames based on the city , now the new Data frame has everything including the region to which the city belongs.         
+6) Then we query to get the region & average Total Sales and group them by region.              
+7) Using KappleExtra library we display a few of the records of the final Data frame to be used for our analysis in Graph.           
+8) Using ggplot function of ggplot2 library we plot and show which region has the highest average total sales of Avacado .       
 
 ```{r}
 files <- list.files(pattern = "*.xls")
@@ -76,12 +82,7 @@ graph_data %>%
   scale_x_discrete(limits=graph_data$region) + 
   geom_bar(stat="identity") + 
   labs(title = "Sales By Region", x="Region", y="Avg Sales")  
-  
-  
-
-
-
 ```
 
 ##Summary :-
- Using the graph we can clearly see that California region has the highest total sales of Avacado, followed by North East region anmd West region has the least consumption on avacado.
+ Using the graph we can clearly see that California region has the highest total sales of Avacado, followed by North East region and West region has the least consumption on avacado.
