@@ -149,7 +149,11 @@ library(kableExtra)</code></pre>
 </div>
 <div id="xml-file" class="section level3 tabset tabset-fade tabset-pills">
 <h3>XML File</h3>
-<p>XML is a extensible markup language. It is a data description language used for describing data. <details> <summary> <em>XML File</em> </summary></p>
+<p>XML is a extensible markup language. It is a data description language used for describing data.</p>
+<hr />
+<div id="xml-script" class="section level4">
+<h4>XML Script</h4>
+<p><details> <summary> <em>XML File</em> </summary></p>
 <pre class="r"><code>&lt;books&gt;
  &lt;book copyright='2008' lang='eng' title='breaking dawn' publisher='Brown and Company' isbn='978-0-316-06792-8' genre='Paranormal romance'&gt;
   &lt;author&gt; Stephenie Meyer.&lt;/author&gt;
@@ -167,6 +171,7 @@ library(kableExtra)</code></pre>
 &lt;/books&gt;</code></pre>
 <p></details></p>
 <hr />
+</div>
 <div id="load-xml-file" class="section level4">
 <h4>Load XML File</h4>
 <p><em>Step 1</em>: Use RCurl package function ::getURL` to download the URL for the raw data into R.</p>
@@ -296,6 +301,9 @@ Biography
 <div id="json-file" class="section level3 tabset tabset-fade tabset-pills">
 <h3>JSON File</h3>
 <p>Another standard for data storage and interchange on the Web is the JavaScript Object Notation, abbreviated JSON. JSON is an increasingly popular alternative to XML for data exchange purposes that comes with some preferable features.</p>
+<hr />
+<div id="json-script" class="section level4">
+<h4>JSON Script</h4>
 <p><details> <summary> <em>JSON File</em> </summary></p>
 <pre class="r"><code> {
     &quot;copyright&quot;: &quot;2008&quot;,
@@ -326,6 +334,7 @@ Biography
 }</code></pre>
 <p></details></p>
 <hr />
+</div>
 <div id="load-json-file" class="section level4">
 <h4>Load JSON File</h4>
 <p><em>Step 1</em>: Use getURL to access file from Github</p>
@@ -442,6 +451,9 @@ Biography
 <div id="html-file" class="section level3 tabset tabset-fade tabset-pills">
 <h3>HTML File</h3>
 <p>An HTML(Hyper Test Markup Language) file is basically nothing but plain text-it can be opened and edited with any text editor. What makes HTML so powerful is its marked up structure.</p>
+<hr />
+<div id="html-script" class="section level4">
+<h4>HTML Script</h4>
 <p><details> <summary> <em>HTML File</em> </summary></p>
 <pre class="r"><code>&lt;html&gt;
 &lt;head&gt;&lt;/head&gt;
@@ -527,6 +539,7 @@ Biography
 &lt;/html&gt;</code></pre>
 <p></details></p>
 <hr />
+</div>
 <div id="load-html-file" class="section level4">
 <h4>Load HTML File</h4>
 <p><em>Step 1</em>: Use getURL to access file from Github, and using the htmlParse method to load html doc into R memory in tree structure.</p>

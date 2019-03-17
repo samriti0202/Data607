@@ -5,8 +5,8 @@ author:
 - Author2 :Vishal Arora
 date: "3/14/2019"
 output:
-  pdf_document: default
   html_document: null
+  pdf_document: default
   theme: journal
   toc: yes
   toc_depth: 4
@@ -41,7 +41,10 @@ library(kableExtra)
 ***
 ### XML File {.tabset .tabset-fade .tabset-pills}
 
-XML is a extensible markup language. It is a data description language used for describing data. 
+XML is a extensible markup language. It is a data description language used for describing data.
+
+***
+#### XML Script
 <details>
   <summary> *XML File* </summary>
 ```{r eval=FALSE}
@@ -119,6 +122,8 @@ kable(xmldf) %>%
 Another standard for data storage and interchange on the Web is the
 JavaScript Object Notation, abbreviated JSON. JSON is an increasingly popular alternative to XML for data exchange purposes that comes with some preferable features.
 
+***
+#### JSON Script
 <details>
   <summary> *JSON File* </summary>
 ```{r eval=FALSE}
@@ -186,6 +191,8 @@ kable(doc_json) %>%
 ### HTML File {.tabset .tabset-fade .tabset-pills}
 An HTML(Hyper Test Markup Language) file is basically nothing but plain text-it can be opened and edited with any text editor. What makes HTML so powerful is its marked up structure.
 
+***
+#### HTML Script
 <details>
   <summary> *HTML File* </summary>
 ```{r eval=FALSE}
