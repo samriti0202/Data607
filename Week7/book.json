@@ -1,0 +1,28 @@
+[{
+	"copyright": "2008",
+	"lang": "eng",
+	"title": "breaking dawn",
+	"author": "Stephenie Meyer",
+	"publisher":"Brown and Company",
+	"isbn": "98723415680abc" ,
+	"genre":"Paranormal romance"
+},
+{
+	"copyright": "2004",
+	"lang": "eng",
+	"title": "Guardian of the Horizon",
+	"author": "Elizabeth Peters",
+	"publisher":"HarperCollins",
+	"isbn": "0066214718" ,
+	"genre":"Mystery"
+},
+{
+	"copyright": "2004",
+	"lang": "eng",
+	"title": "Extreme Ownership",
+	"author": ["Jocko Willink" ,"Leif Babin"],
+	"publisher":"St.Martin'sPress",
+	"isbn": "978125006705" ,
+	"genre":"Biography"
+}
+]
