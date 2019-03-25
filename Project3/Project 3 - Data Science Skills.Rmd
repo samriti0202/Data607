@@ -1,0 +1,517 @@
+---
+title: 'Week 8 - Project 3 - Data Science Skills'
+author: 'Team DeViSal - Act Of Inventing   : ''De''babrata Kabiraj, ''Vi''shal Arora,
+  ''Sa''mriti Malhotra'
+date: "March 22, 2019"
+output:
+  html_document:
+    code_folding: hide
+    highlight: tango
+    number_sections: yes
+    smooth_scroll: yes
+    theme: united
+    toc: yes
+    toc_collapsed: yes
+    toc_depth: 3
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
+---
+
+# Goal
+Please use data to answer the question,
+"Which are the most valued data science skills?"
+
+# Pre-Requistes : Available Libraries
+```{r install-library-list, eval=TRUE, include=FALSE, echo=TRUE}
+#install.packages(c("googlesheets","readxl","DT","data.table","tidyr","dplyr","kableExtra","DBI","RMySQL","RODBC","dbplot","ggplot2","tm","wordcloud2","RColorBrewer","tidyverse"),
+ #               repos = "http://cran.us.r-project.org", dependencies = TRUE)
+knitr::opts_chunk$set(echo = TRUE, 
+                      warning = FALSE, 
+                      out.width = "100%", 
+                      message = FALSE
+                      )
+```
+- googlesheets
+- readxl
+- DT
+- data.table
+- kableExtra
+- dplyr
+- tidyr
+- tidyverse
+- rlang
+- stringr
+- RMySQL
+- DBI
+- ggplot2
+- tm
+- wordcloud2
+- RColorBrewer
+
+# Gather data
+## Read Data Source into R from Google/Spread Sheets
+- [Data Scientist General Skills 2018](https://www.kaggle.com/discdiver/data-scientist-general-skills-2018-revised)
+- [Kaggle Machine Learning & Data Science Survey 2017](https://www.kaggle.com/kaggle/kaggle-survey-2017)
+
+```{r load-library-googlesheets, eval=TRUE, include=FALSE, echo=FALSE}
+library(googlesheets)
+library(readxl)
+```
+```{r get-source-file, eval=TRUE, include=FALSE, echo=TRUE}
+# which google sheets do you have access to? may ask you to authenticate in a browser!
+gs_ls("https://docs.google.com/spreadsheets/d/1rTr2r5NlSy8QBEhqwpP0HL2aZfWZflrN8kw7KC3Vi5M/edit#gid=1248983012")
+#gs_ls("https://docs.google.com/spreadsheets/d/1rTr2r5NlSy8QBEhqwpP0HL2aZfWZflrN8kw7KC3Vi5M/edit?usp=sharing")
+
+
+SpreadSheet <- gs_title("Data Science")
+
+#Get Sheet names
+gs_ws_ls(SpreadSheet)
+
+# convert to data.frame
+df_Job_Listings <- as.data.frame(gs_read(ss=SpreadSheet, ws = "Job Listings"))
+df_Language_Skills <- as.data.frame(gs_read(ss=SpreadSheet, ws = "Language Skills"))
+df_Software_Skills <- as.data.frame(gs_read(ss=SpreadSheet, ws = "Software Skills"))
+#df_MCR <- as.data.frame(gs_read(ss=SpreadSheet, ws = "multipleChoiceResponses"))
+
+myWorkingDir <- getwd()
+myWorkingDir
+mySourceFile <- paste0(myWorkingDir,"/Data Science.xlsx")
+mySourceFile
+excel_sheets(path = mySourceFile)
+#df_Jobs <- read_excel(path = mySourceFile, sheet = 1, range = "A1:B6")
+#df_Languages <- read_excel(path = mySourceFile, sheet = "Language Skills", range = "A1:E38")
+#df_Softwares <- read_excel(path = mySourceFile, sheet = "Software Skills", range = "A1:E16")
+#df_Job_Listings <- read_excel(path = mySourceFile, sheet = 1)
+#df_Language_Skills <- read_excel(path = mySourceFile, sheet = "Language Skills")
+#df_Software_Skills <- read_excel(path = mySourceFile, sheet = "Software Skills")
+df_MCR <- read_excel(path = mySourceFile, sheet = "multipleChoiceResponses")
+```
+
+## Show data {.tabset .tabset-fade .tabset-pills}
+```{r load-library-DT-kable-dplyr, eval=TRUE, include=FALSE, echo=FALSE}
+library(DT)
+library(kableExtra)
+library(dplyr)
+
+```
+### Untidy Data- Job Listings
+```{r show-dataTable-Jobs, eval=TRUE, include=TRUE, echo=FALSE}
+#DT::datatable(df_Job_Listings, options = list(pagelength=5))
+```
+```{r show-kable-Jobs, eval=TRUE, include=TRUE, echo=FALSE}
+kable(head(df_Job_Listings)) %>%
+  kable_styling(bootstrap_options = c("striped","hover","condensed","responsive"),full_width   = F,position = "left",font_size = 12) %>%
+  row_spec(0, background ="gray")
+```
+
+### Untidy Data Table - Language Skills
+```{r show-dataTable-Languages, eval=TRUE, include=TRUE, echo=FALSE}
+#DT::datatable(df_Language_Skills, options = list(pagelength=5))
+```
+```{r show-kable-Languages, eval=TRUE, include=TRUE, echo=FALSE}
+kable(head(df_Language_Skills)) %>%
+  kable_styling(bootstrap_options = c("striped","hover","condensed","responsive"),full_width   = F,position = "left",font_size = 12) %>%
+  row_spec(0, background ="gray")
+```
+
+### Untidy Data Table - Software Skills
+```{r show-dataTable-Softwares, eval=TRUE, include=TRUE, echo=FALSE}
+#DT::datatable(df_Software_Skills, options = list(pagelength=5))
+```
+```{r show-kable-Softwares, eval=TRUE, include=TRUE, echo=FALSE}
+kable(head(df_Software_Skills)) %>%
+  kable_styling(bootstrap_options = c("striped","hover","condensed","responsive"),full_width   = F,position = "left",font_size = 12) %>%
+  row_spec(0, background ="gray")
+```
+
+### Untidy Data Table - Demographics
+```{r show-dataTable-MCR, eval=TRUE, include=TRUE, echo=FALSE}
+#DT::datatable(df_MCR, options = list(pagelength=5))
+```
+```
+Due to 16K rows and more than 200+ columns, it is taking time and eventually times out. So commented out the code to view the data.
+```
+
+# Data Wrangling
+```{r load-library-tidyr, eval=TRUE, include=TRUE, echo=FALSE}
+library(tidyr)
+```
+
+**Transformation & Tidying data for Language Skill sheet, before loading into DB**         
+
+*Step1*  : For Language skill sheet, we are subsetting the data on first column using                
+select function from dplyr package. Then using the na.omit function from base package                   
+to omit any rows containing NA in the data frame. then last function we are using to subset               
+the data frame on rows using the slice function.            
+
+*Step2*  : Using the base function scale to make the axis data scaler for plotting the graph.             
+
+*Step3*  : Merging the original dataframe first column and the newly created scaled dataframe using select function from dplyr & cbing function from base r .           
+
+*Step4*  : Now for sorting , we first calculated the mean and added the new AVGMean column to the dataframe, using mutate and mean functions.            
+
+*Step5*  : Now order based on the AvgMean column , and select the top 15  values, and then using gather function , gather columns into rows for plotting the graph.
+
+> Scale function :- In simpler terms without changing the data , we change the scale of the data (axis values while plotting) 
+
+```{r data-transform-language-skills}
+
+language_skills_df<- slice(na.omit(dplyr::select(df_Language_Skills,1:5)),1:37)
+languagedf <- dplyr::select(language_skills_df,2:5)
+languagemaxs <- apply(languagedf, 2, max)
+languagemins <- apply(languagedf, 2, min)
+
+languageScaled_df <- as.data.frame(scale(languagedf, center = languagemins, scale = languagemaxs - languagemins))
+
+language_df <- dplyr::select(language_skills_df,1)
+languageSkillSet <- cbind.data.frame(language_df,languageScaled_df)
+languageSkillSetDF <- mutate(languageSkillSet,AvgMean = apply(languageScaled_df,1, mean))
+orderedLanguageSkillSetDF <- languageSkillSetDF[order(-languageSkillSetDF$AvgMean),]
+orderedLanguageSkillSetDF_excludedAvgMean <- head(dplyr::select(orderedLanguageSkillSetDF,1:5),15)
+languageSkillSetDF <- head(languageSkillSetDF,15)
+
+orderedLanguageSkillSetDF_excludedAvgMean.long <- gather(orderedLanguageSkillSetDF_excludedAvgMean,variable, value,-1)
+
+```
+                       
+**Transformation & Tidying data for Software Skill sheet, before loading into DB**         
+
+*Step1*  :  Using na.omit function remove all rows with NA values.         
+
+*Step2*  :  Using filter method , to subset observations i.e. based on certain logic extract rows.         
+
+*Step3*  :  Then using slice to further subset the dataframe .
+                      
+
+```{r data-transform-software-skills}
+
+software_skills_df <- na.omit(df_Software_Skills)
+software_skills_df <- filter(software_skills_df,Software!="Total" )
+software_skills_df <- slice(software_skills_df , 1:15)
+```
+              
+```{r load-libraries, eval=TRUE, include=FALSE, echo=FALSE}
+# For data cleaning
+library(tidyverse)
+library(rlang)
+library(stringr)
+```
+          
+**Transformation & Tidying data for Software Skill sheet, before loading into DB**           
+
+*Step1*  : Using select function, subsetting the dataframe.           
+
+*step2*  : Wrote function to select the questions with only one answer, remove rows with no respondent answers, group by responses to the question, counting the respondents asnswering and finally calculation the percentage for the same. Finally arranginf in descending order.
+             
+```{r data-transform-multiple-choice-responses}
+mcr_df <- df_MCR %>% select(c("GenderSelect", "Country", "Age", "CurrentJobTitleSelect", "EmploymentStatus", "Tenure", "FormalEducation","FirstTrainingSelect","LearningCategorySelftTaught","LearningCategoryOnlineCourses","LearningCategoryWork","LearningCategoryUniversity","LearningCategoryKaggle","LearningCategoryOther"))
+mcr_df$Age <- as.numeric(as.character(mcr_df$Age))
+
+# Function for single choice questions : A function to analyze questions where you choose only one answer
+chooseOne = function(question, filterData = mcr_df){
+  filterData %>% 
+    filter(!UQ(sym(question)) == "") %>% 
+    group_by_(question) %>% 
+    summarise(count = n()) %>% 
+    mutate(percent = (count / sum(count)) * 100) %>%  
+    arrange(desc(count)) 
+}
+```
+                   
+# Load data into Database
+
+```{r load-library-RMySQL-DBI,warning=FALSE, eval=TRUE, include=FALSE, echo=FALSE}
+library(RMySQL)
+library(DBI)
+```
+*Step1* : Using dbconnect function to make a connection  to Google Cloud MySQL database.
+
+
+```{r connect-to-mySQL,warning=FALSE, eval=TRUE, include=TRUE, echo=FALSE}
+conn <- dbConnect(dbDriver('MySQL'),
+                  dbname="CUNY_DATA607",
+                  host="35.231.71.159",
+                  user="root",
+                  password="data607", 
+                  port=3306)
+paste("Connected to mysql on", date())
+```
+*Step2* : Create and Load Tables in mySQL Google Cloud , below are the tables to which data is loaded.             
+- Job_Listings_Tbl            
+- Language_Skills_Tbl             
+- Software_Skills_Tbl            
+
+*Step3* : Using various functions from RMySQL package e.g. (dbExistsTable,dbSendQuery,dbRemoveTable and dbWriteTable) to create and remove table and check if table already exist , and to query the database.           
+```{r load-b-JobListing, eval=TRUE, include=FALSE, echo=FALSE}
+# Write the data frame to the database
+dbWriteTable(conn, name = "Job_Listings_Tbl", value = df_Job_Listings, row.names = FALSE, overwrite=T)
+```
+
+```{r load-db-LanguageSkills, eval=TRUE, include=FALSE, echo=FALSE}
+# Drop table if it already exists
+dbSendQuery(conn, "DROP TABLE IF EXISTS Language_Skills_Tbl;")
+# Create table
+dbSendQuery(conn, "CREATE TABLE Language_Skills_Tbl 
+(Language 	  VARCHAR(100) NOT NULL,
+ LinkedIn  	  VARCHAR(100) NOT NULL,
+ Indeed  	    VARCHAR(100) NOT NULL,
+ SimplyHired  VARCHAR(100) NOT NULL,
+ Monster      VARCHAR(100) NOT NULL,
+ CONSTRAINT pk_Language_Skills PRIMARY KEY (Language)
+ );")
+# Load table
+dbWriteTable(conn,"Language_Skills_Tbl",language_skills_df,overwrite=T)
+```
+
+```{r load-SoftwareSkills, eval=TRUE, include=FALSE, echo=FALSE}
+# Drop table if it already exists
+if (dbExistsTable(conn, "Software_Skills_Tbl"))
+    dbRemoveTable(conn, "Software_Skills_Tbl")
+
+# Write the data frame to the database
+dbWriteTable(conn, name = "Software_Skills_Tbl", value = software_skills_df, row.names = FALSE)
+```
+
+# Visualizations
+
+```{r load-libraries-ggplot2-dbplot, eval=TRUE, include=FALSE, echo=FALSE}
+library(ggplot2)
+```
+##Job Listings
+```{r plot1-JobListings, eval=FALSE, include=FALSE, echo=FALSE}
+results <- dbGetQuery(conn, "select * from Job_Listings_Tbl")
+ggplot(results, aes(x=results$Source,y=results$Count, fill=results$Source)) + 
+  geom_bar(stat="identity", aes(fill = c("Grey","cyan","green","pink","blue")),width=.8) +
+  guides(fill=FALSE) +
+  xlab("Job Sites") + ylab("No of Job postings") +
+  ggtitle("Average job postings by sites for Data science skill set")
+```
+           
+
+```{r plot2-JobListings, eval=TRUE, include=TRUE, echo=FALSE}
+tbl(conn, "Job_Listings_Tbl") %>%
+  collect() %>%
+  ggplot(aes(x=Source, y=Count, fill=Source, color = Source)) +
+    geom_bar(stat="identity", position=position_dodge(), colour="black", width = 0.5) +
+    ggtitle("Job Listings for Data Scientist for month of October 2018") +
+    xlab("Source") + ylab("Job Portal") +
+    geom_text(aes(label=paste(Count)), vjust=0.5, hjust=1.1,color="black") +
+    theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5))
+```
+**Looking at the graph, we can safely assume that in the month of Oct 2018 LinkedIn posted the highest number of job requirements for Data Science .**             
+
+## Language Skills
+```{r plot-LanguageSkills, eval=FALSE, include=FALSE, echo=FALSE}
+ggplot(data = orderedLanguageSkillSetDF_excludedAvgMean.long, aes(x = orderedLanguageSkillSetDF_excludedAvgMean.long$Language, y = value,fill = variable)) +
+  scale_x_discrete(limits=c(languageSkillSetDF$Language)) +
+  geom_col(position = position_dodge())  +
+  labs(title = "Data Science Skill graph", x="Language Set", y="Scaled Listing") +
+  theme(axis.text.x=element_text(angle=75,hjust=.45,vjust=0.5))
+```
+
+
+
+```{r show-Language_Skills, eval=TRUE, include=TRUE, echo=FALSE}
+#tbl(conn, "Language_Skills") %>%
+tbl(conn, sql("SELECT Language,LinkedIn,Indeed,SimplyHired,Monster FROM Language_Skills ORDER BY (LinkedIn+Indeed+SimplyHired+Monster) DESC LIMIT 15")) %>%
+  collect() %>%
+  tidyr::gather("Portal", "Count",2:5) %>%
+  ggplot(aes(x=reorder(Language,Count), y=Count)) + 
+  geom_bar(aes(fill = Portal), position = "dodge", stat = "identity") + 
+  xlab("Portal") +
+  ylab("Job Count") + 
+  theme(text = element_text(), axis.text.x = element_text(angle=90, vjust=1)) 
+```
+**Looking at the graph above, wecan safely assume that Python, followed by R and then SQL are most preffered language for Data Science in all Job sites and similarly at the end of the specturm C is least preffered language for Data Science.**                   
+             
+```{r load-libraries-tm-wordcloud-RColorBrewer, eval=TRUE, include=FALSE, echo=FALSE}
+library(tm)
+library(wordcloud2)
+library(RColorBrewer)
+```
+```{r show-data-Language_Skills, eval=TRUE, include=TRUE, echo=FALSE}
+tbl(conn, sql("SELECT Language, LinkedIn+Indeed+SimplyHired+Monster FROM Language_Skills_Tbl")) %>%
+  wordcloud2(size=0.9, color='random-dark', shape = 'circle')
+```
+
+## Software Skills
+```{r get-SoftwareSkills, eval=TRUE, include=FALSE, echo=FALSE}
+resultsSoftwareSkills <- dbGetQuery(conn, "SELECT * FROM Software_Skills_Tbl")
+df <- dplyr::select(resultsSoftwareSkills,2:5)
+maxs <- apply(df, 2, max)
+mins <- apply(df, 2, min)
+
+scaled_df <- as.data.frame(scale(df, center = mins, scale = maxs - mins))
+software_df <- dplyr::select(resultsSoftwareSkills,1)
+finalSkillSet <- cbind.data.frame(software_df,scaled_df)
+finalSkillSetDF <- mutate(finalSkillSet,AvgMean = apply(scaled_df,1, mean))
+orderedSkillSetDF <- finalSkillSetDF[order(-finalSkillSetDF$AvgMean),]
+#orderedSkillSetDF
+orderedSkillSetDF_excludedAvgMean <- dplyr::select(orderedSkillSetDF,1:5)
+#orderedSkillSetDF_excludedAvgMean
+orderedSkillSetDF_excludedAvgMean.long <- gather(orderedSkillSetDF_excludedAvgMean,variable, value,-1)
+#head(orderedSkillSetDF_excludedAvgMean.long)
+```
+```{r plot-SoftwareSkills, eval=TRUE, include=TRUE, echo=FALSE}
+ggplot(data = orderedSkillSetDF_excludedAvgMean.long, aes(x = orderedSkillSetDF_excludedAvgMean.long$Software, y = value,fill = variable)) +
+  scale_x_discrete(limits=c(orderedSkillSetDF$Software)) +
+  geom_col(position = position_dodge())  +
+  labs(title = "Data Science Skill graph", x="Skill Set", y="Scaled Listing") +
+  theme(axis.text.x=element_text(angle=75,hjust=.45,vjust=0.5)) +
+  coord_flip()
+  
+# scale_x_discrete(limits=orderedSkillSetDF_excludedAvgMean.long$Software) +
+#all.equal(software_skills_df, resultsSoftwareSkills)
+#which(software_skills_df != resultsSoftwareSkills)
+```
+
+```{r qplot-SoftwareSkills, eval=FALSE, include=FALSE, echo=FALSE}
+df_Softwares <- dbGetQuery(conn, "SELECT * FROM Software_Skills_Tbl")
+df_Software_Skills <- gather(df_Softwares, "Portal", "Count",2:5)
+qplot(x=Software, y=Count, data=df_Software_Skills, shape=Portal, size=I(5), colour=Portal, 
+      xlab="Software Skills", ylab="Frequency", main = "Software Skills by Frequency") + 
+  theme(text = element_text(), axis.text.x = element_text(angle=90, vjust=1)) 
+```
+**Looking at the above graphs, we can safelu assume that Analysis is the most preffered Software skill in all Job portal other than LinkedIn, whereas Machine Learning is the most preffered software skill in LinkedIn. On the other end of specturm Data Engineering is the least preffered language in all Job Portals.**           
+          
+## Demographics on Data Science Users
+
+**<u>First Data Science Learning</u>**
+```{r, eval=TRUE, include=TRUE, echo=FALSE}
+chooseOne("FirstTrainingSelect") %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped","hover","condensed","responsive"),full_width   = F,position = "left",font_size = 12) %>%
+  row_spec(0, background ="gray")
+```
+```{r FirstTraining, eval=TRUE, include=FALSE, echo=FALSE}
+library(purrr)
+training <- mcr_df %>% 
+            select(starts_with("LearningCategory"), -contains("FreeForm")) %>% # Keep only the columns that start with "LearningCategory" and don't include "FreeForm"
+            purrr::set_names(c("Self-taught", "Online Courses", "Work", "University Lecture", "University Practical Course", "Other")) %>% # Set column names
+            gather(key = response, value = percent) %>% # Re-structure the data
+            filter(!is.na(percent)) %>% # Remove any rows where the percentage was NA
+            mutate(percent = as.numeric(percent)) # Change the percentage column to a number
+```
+```{r plot-FirstTraining, eval=TRUE, include=TRUE, echo=FALSE}
+ggplot(training, aes(x = percent, fill = response)) + 
+  geom_histogram(bins = 10) + 
+  facet_wrap(~response) + 
+  xlab("Percent of Learning") + 
+  ylab("Count of Given Percentage") + 
+  theme(legend.position="none")
+```
+
+**<u>Employment Status</u>**
+```{r, eval=TRUE, include=TRUE, echo=FALSE}
+chooseOne("EmploymentStatus") %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped","hover","condensed","responsive"),full_width   = F,position = "left",font_size = 12) %>%
+  row_spec(0, background ="gray")
+```
+
+**<u>Job Titles</u>**
+```{r, eval=TRUE, include=TRUE, echo=FALSE}
+chooseOne("CurrentJobTitleSelect") %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped","hover","condensed","responsive"),full_width   = F,position = "left",font_size = 12) %>%
+  row_spec(0, background ="gray")
+```
+
+**<u>Experience</u>**
+```{r, eval=TRUE, include=TRUE, echo=FALSE}
+chooseOne("Tenure") %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped","hover","condensed","responsive"),full_width   = F,position = "left",font_size = 12) %>%
+  row_spec(0, background ="gray")
+```
+
+**<u>Formal Education</u>**
+```{r, eval=TRUE, include=TRUE, echo=FALSE}
+chooseOne("FormalEducation") %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped","hover","condensed","responsive"),full_width   = F,position = "left",font_size = 12) %>%
+  row_spec(0, background ="gray")
+```
+
+**<u>Country</u>**
+```{r show-multiple-choice-responses-residence, eval=TRUE, include=TRUE, echo=FALSE}
+chooseOne("Country") %>%
+  ggplot(aes(x = reorder(Country, count), y = count)) + 
+    geom_bar(stat = "identity") + 
+    theme(axis.text.x = element_text(angle = 90,
+                                     vjust = 0.5,
+                                     hjust = 1)) + 
+    xlab("Country of Residence")
+
+
+```
+**Looking at the above graph, we can safely assume that  US and India are home to the most no of data science users . Russia, UK, People's Republic of China, Brazil, Germany, France, Canada, and Australia are the close behind.**
+
+
+**<u>Gender</u>**
+```{r ageGender, eval=TRUE, include=FALSE, echo=FALSE}
+ageGender <- mcr_df %>% 
+             group_by(GenderSelect, Age) %>% # Group data by gender and then age
+             filter(!GenderSelect == "") %>%  # Remove empty gender and age entries
+             filter(!Age == "")
+```
+```{r plotAgeGender, eval=TRUE, include=TRUE, echo=FALSE}
+ggplot(ageGender, aes(x = Age, fill = GenderSelect)) + 
+  geom_density(alpha=.3) + 
+  facet_wrap(~GenderSelect) + 
+  theme(legend.position="none")
+
+```
+**Data Science users of different gender identities generally fall into the similar age distributions**       
+
+
+**<u>Age</u>**
+```{r show-multiple-choice-responses-age, eval=TRUE, include=TRUE, echo=FALSE}
+ageHist <- mcr_df %>% filter(!Age == "") %>% select(Age)
+
+ggplot(ageHist, aes(x = Age)) + 
+  geom_histogram(binwidth = 2) + 
+  xlab("Age (years)") + 
+  ylab("Number of Respondents")
+```
+
+
+```{r show-median-age, eval=TRUE, include=TRUE, echo=FALSE}
+ageHist %>% summarise(median = median(Age, na.rm = TRUE), sd = sd(Age, na.rm = TRUE))
+```
+** Looking at the above graph , The median age is 30 years (plus or minus 10 years).**       
+
+
+
+```{r top5, eval=TRUE, include=FALSE, echo=FALSE}
+top5 <- chooseOne("Country") %>%
+        filter(!Country == "Other") %>% # remove "Other"
+        mutate(row = row_number()) %>% # add a row number to each row
+        filter(row <= 5) %>% # select only the top 5 countries
+        select(Country) %>% # keep only the country name column
+        mutate(Country = as.character(Country)) # change these to character elements, instead of factors
+
+# Create a list of the top 5 countries
+top5List <- top5$Country
+
+top5Age <- mcr_df  %>%
+          filter(Country %in% top5List) %>% # Keep only entries whose country is included in the top 5 list
+          filter(Age > 1, !is.na(Age)) %>% # Remove any ages that are under a year or NA or blank
+          filter(!Age == "") %>% 
+          group_by(Country, Age) # Group the data by country and then age
+```
+```{r plot-top5, eval=TRUE, include=TRUE, echo=FALSE}
+ggplot(top5Age, aes(x = Age, fill = Country)) + 
+  geom_density(alpha = 0.3) + 
+  facet_wrap(~Country) + 
+  ylab("Density of Users of a Given Age") + 
+  theme(legend.position="none")
+
+```
+**From above Graph it is clear that  Russian and Chinese Data Science users are slightly younger than Data Science users from other countries. Also, there's a wider age-range of users in the US and UK.** 
+
+#Summary# 
+Overall the language most preffered for Data Science skill is Python followed by R & SQL, whereas Analysis followed by Machine learning is software skill which is in demand.
