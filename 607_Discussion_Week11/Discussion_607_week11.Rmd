@@ -1,0 +1,49 @@
+---
+title: "DATA607 WEEK11 Discussion"
+author: "Samriti Malhotra"
+date : "April 10, 2019"
+output:
+    prettydoc::html_pretty:
+      theme: Leonids
+---
+
+# Pinterest Recommender System
+
+### Perform a Scenario Design analysis as described below.  Consider whether it makes sense for your selected recommender system to perform scenario design twice, once for the organization (e.g. Amazon.com) and once for the organization's customers.
+
+## Who are Pinterest's Target Users?
+Pinterest is a visual discovery tool for saving and discovering content. Users save content they find on the Web as pins and create collections of these pins on boards. Related Pins leverages this human-curated content to provide personalized recommendations of pins based on a given query pin.
+
+## What are Pinterest's key goals ?
+Pinterest is a social network that allows users to visually share, and discover new interests by posting (known as 'pinning' on Pinterest) images or videos to their own or others' boards (i.e. a collection of 'pins,' usually with a common theme) and browsing what other users have pinned.
+
+## How can Pinterest help their users accomplish those goals?
+As with most other social networks, users can perform standard social networking functions such as following the boards of their friends, liking and commenting on other users' pins, re-pinning content to their own boards, sharing others' pins on Facebook and Twitter or via email, and even embedding individual pins on their website or blog.Pinterest saw incredible growth in 2013 - for the first time ever, Pinterest surpassed email as a sharing medium, and even outpaced Facebook.
+
+Small businesses can capitalize on the Pinterest surge to market their products and grow their consumer base. Pinterest, a highly visual medium, gives businesses a chance to engage consumers with compelling images and colorful infographics that promote deals and new products. Pinning pictures of employees could also help customers identify with the people who work at the company, putting a face to a name. Small business owners can also help facilitate conversations about their brands online by adding "share" buttons to their websites. These digital icons allow site visitors to easily click and share a piece of content through a specific Pinterest board.
+
+### Attempt to reverse engineer what you can about the site, from the site interface and any available information that you can find on the Internet or elsewhere.
+
+Related Pins recommendations are also incorporated into several other parts of Pinterest, including the home feed, pin pages for unauthenticated visitors, the “instant ideas” button for related ideas, emails, notifications, search results,and the “Explore” tab.
+
+In the Pinterest data model, each pin is an instance of an image (uniquely identified by an image signature) with a link and description. Although each pin is on a single board, the same image can be used in many pins across different boards:when a pin is saved to a new board, a copy of the pin is created. Pin information is typically aggregated on the image
+signature level, providing richer metadata than individual pin instances. For convenience, future references to “querypin” and “result pin” actually refer to the aggregation of pins with the same image signature.
+
+The Related Pins system comprises three major components summarized below.
+
+### Include specific recommendations about how to improve the site's recommendation capabilities going forward.
+
+
+
+### Sources
+
+Building the Next New York Times Recommendation Engine - NY Times_
+_https://open.blogs.nytimes.com/2015/08/11/building-the-next-new-york-times-recommendation-engine/_
+
+_Pinterest Website Reviews_
+_https://www.infront.com/blog/the-blog/what-is-pinterest-and-how-does-it-work_
+
+_Recommender system_
+_https://www.infoworld.com/article/3241852/how-to-implement-a-recommender-system.html_
+
+_https://arxiv.org/pdf/1702.07969.pdf_
