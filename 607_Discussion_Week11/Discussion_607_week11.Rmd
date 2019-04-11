@@ -1,6 +1,6 @@
 ---
 title: "DATA607 WEEK11 Discussion"
-author: "Samriti Malhotra"
+author: "Samriti Malhotra / Vishal Arora"
 date : "April 10, 2019"
 output:
     prettydoc::html_pretty:
@@ -30,14 +30,43 @@ In the Pinterest data model, each pin is an instance of an image (uniquely ident
 signature level, providing richer metadata than individual pin instances. For convenience, future references to “querypin” and “result pin” actually refer to the aggregation of pins with the same image signature.
 
 The Related Pins system comprises three major components summarized below.
+![](https://github.com/samriti0202/Data607/blob/master/607_Discussion_Week11/1_Snapshot.JPG?raw=true)
+
+<B>Candidate generation.</B> Narrow the candidate
+set—the set of pins eligible for Related Pin recommendations—from billions to roughly 1,000 pins that are likely related to the query pin.
+
+<B>Memboost.</B> A portion of system memorizes past engagement on specific query and result pairs . It describes how the account is positioned using historical data.
+
+<B>Ranking.</B> A machine-learned ranking model is applied to the pins, ordering them to maximize our target engagement metric of Save Propensity. I
+
+For building ranking system training data collection method, learning objective, and model type are used.  
+Training Data Collection
+  <ul><li>Memboost scores as training data. Conceptually, the ranker can learn to predict Memboost scores for query-result pairs without enough log data to have a confident Memboost
+estimate. 
+
+<li>Individual Related Pins sessions. A session is defined as a single user’s interactions with Related Pins results from a single query pin. We can sample these interactions directly as training data.
+</ul>
+
+Model Objective
+learning to rank approaches are broadly categorized into pointwise, pairwise, and listwise approaches. The main difference between these approaches is whether the loss function considers one, two, or many candidates at a time. 
+![](https://github.com/samriti0202/Data607/blob/master/607_Discussion_Week11/2_Model_objective.JPG?raw=true)
+
+Model Formulation:
+The precise form of the model determines the model’s
+capacity for describing complex relationships between the features and score. Table 3 compares two model types that we have used.
+
+Below Table shows the various combinations of training data, objective, and model that are explored in Related Pins ranking.
+
+![](https://github.com/samriti0202/Data607/blob/master/607_Discussion_Week11/3_deceision_model.JPG?raw=true)
+
 
 ### Include specific recommendations about how to improve the site's recommendation capabilities going forward.
 
-
+Recommender systems literature showcase many impressive state-of-the-art systems. It was important to diversify content, because engagement is not always correlated to relevance. Finally, making more of the system real-time, both in candidate generation and ranking, significantly increased velocity of experimentation and improved responsiveness of the results.
 
 ### Sources
 
-Building the Next New York Times Recommendation Engine - NY Times_
+_Building the Next New York Times Recommendation Engine - NY Times_
 _https://open.blogs.nytimes.com/2015/08/11/building-the-next-new-york-times-recommendation-engine/_
 
 _Pinterest Website Reviews_
@@ -46,4 +75,5 @@ _https://www.infront.com/blog/the-blog/what-is-pinterest-and-how-does-it-work_
 _Recommender system_
 _https://www.infoworld.com/article/3241852/how-to-implement-a-recommender-system.html_
 
-_https://arxiv.org/pdf/1702.07969.pdf_
+_https://arxiv.org/pdf/1702.07969.pdf _
+
