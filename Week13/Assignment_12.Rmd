@@ -1,0 +1,213 @@
+---
+title: "Week 13 assignment - NoSQL migration"
+author: "Vishal Arora / Samriti Malhotra"
+date: "April 28, 2019"
+output:
+    prettydoc::html_pretty:
+      theme: Leonids
+      
+---
+
+#Problem Statement
+* For this assignment, you should take information from a relational database and migrate it to a NoSQL database of your own choosing. 
+* For the NoSQL database, you may use MongoDB (which we introduced in week 7), Neo4j, or another NoSQL database of your choosing.
+* You should also briefly describe the advantages and disadvantages of storing the data in a relational database vs. your NoSQL database.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r echo = TRUE,warning = FALSE, out.width = "100%", message = FALSE}
+require(RCurl)
+require(RJSONIO)
+require(RNeo4j)
+devtools::install_github("nicolewhite/RNeo4j")
+install.packages('RNeo4j', repos="http://cran.rstudio.com/")
+library(kableExtra)
+```
+
+#####For this assignment we used data from Assignment2 - In the  week 2 assignemnt data for user reviews for movies ws collected and differnt tables were created to store the user information, survey and movies information.
+
+####Below is  single Cypher query statement composed of multiple CREATE clauses.This query created Nodes with label Movies and its relationship with Reviewer. The following commands were ran in Neo4j browser.
+
+```{r eval=FALSE}
+CREATE (LegoMovie:Movie_607 {title:'Lego Movie2', genre:'Animation'})
+CREATE (Laura:Person_607 {name:'Laura Belcher', age:35 , gender:'F'})
+CREATE (Elyse:Person_607 {name:'Elyse Johns', age:43 , gender:'F'})
+CREATE (Thomas:Person_607 {name:'Thomas Cook', age:20 , gender:'M'})
+CREATE (David:Person_607 {name:'David schummer', age:65 , gender:'M'})
+CREATE (Chris:Person_607 {name:'Chris Hendry', age:10 , gender:'M'})
+CREATE (Jason:Person_607 {name:'Jason Beans', age:29 , gender:'M'})
+CREATE (Harshaan:Person_607 {name:'Krisha Malhotra', age:4 , gender:'F'})
+CREATE (Kyle:Person_607 {name:'Kyle Jener', age:15 , gender:'F'})
+CREATE
+  (Laura)-[:Average {rating:['Average']}]->(LegoMovie),
+  (Elyse)-[:Poor {rating:['Poor']}]->(LegoMovie),
+  (Thomas)-[:Poor {rating:['Poor']}]->(LegoMovie),
+  (David)-[:Average {rating:['Average']}]->(LegoMovie),
+  (Chris)-[:Exceptional {rating:['Exceptional']}]->(LegoMovie),
+  (Jason)-[:Good {rating:['Good']}]->(LegoMovie),
+  (Harshaan)-[:Exceptional {rating:['Exceptional']}]->(LegoMovie),
+  (Kyle)-[:NotInterested {rating:['Not Interested']}]->(LegoMovie)
+   
+
+CREATE (ColdPursuit:Movie_607 {title:'Cold Pursuit', genre:'Action'})
+CREATE
+  (Laura)-[:Average {rating:['Average']}]->(ColdPursuit),
+  (Elyse)-[:Poor {rating:['Poor']}]->(ColdPursuit),
+  (Thomas)-[:Exceptional {rating:['Exceptional']}]->(ColdPursuit),
+  (David)-[:Average {rating:['Average']}]->(ColdPursuit),
+  (Chris)-[:Good {rating:['Good']}]->(ColdPursuit),
+  (Jason)-[:Exceptional {rating:['Exceptional']}]->(ColdPursuit),
+  (Harshaan)-[:Good {rating:['Good']}]->(ColdPursuit),
+  (Kyle)-[:NotInterested {rating:['Not Interested']}]->(ColdPursuit)
+
+
+CREATE (UnderTheEiffelTower:Movie_607 {title:'Under the Eiffel Tower', genre:'Romance'})
+CREATE
+  (Laura)-[:Exceptional {rating:['Exceptional']}]->(UnderTheEiffelTower),
+  (Elyse)-[:Good {rating:['Good']}]->(UnderTheEiffelTower),
+  (Thomas)-[:Average {rating:['Average']}]->(UnderTheEiffelTower),
+  (David)-[:Good {rating:['Good']}]->(UnderTheEiffelTower),
+  (Chris)-[:Poor {rating:['Poor']}]->(UnderTheEiffelTower),
+  (Jason)-[:Good {rating:['Good']}]->(UnderTheEiffelTower),
+  (Harshaan)-[:NotInterested {rating:['Not Interested']}]->(UnderTheEiffelTower),
+  (Kyle)-[:Exceptional {rating:['Exceptional']}]->(UnderTheEiffelTower)
+
+CREATE (TheProdigy:Movie_607 {title:'The Prodigy', genre:'Horror'})
+CREATE
+  (Laura)-[:Average {rating:['Average']}]->(TheProdigy),
+  (Elyse)-[:Poor {rating:['Poor']}]->(TheProdigy),
+  (Thomas)-[:Exceptional {rating:['Exceptional']}]->(TheProdigy),
+  (David)-[:Good {rating:['Good']}]->(TheProdigy),
+  (Chris)-[:NotInterested {rating:['Not Interested']}]->(TheProdigy),
+  (Jason)-[:Good {rating:['Good']}]->(TheProdigy),
+  (Harshaan)-[:NotInterested {rating:['Not Interested']}]->(TheProdigy),
+  (Kyle)-[:Poor {rating:['Poor']}]->(TheProdigy)
+
+
+CREATE (TheUpside:Movie_607 {title:'The Upside', genre:'Comedy'})
+CREATE
+  (Laura)-[:Good {rating:['Good']}]->(TheUpside),
+  (Elyse)-[:Good {rating:['Good']}]->(TheUpside),
+  (Thomas)-[:Exceptional {rating:['Exceptional']}]->(TheUpside),
+  (David)-[:Good {rating:['Good']}]->(TheUpside),
+  (Chris)-[:Good {rating:['Good']}]->(TheUpside),
+  (Jason)-[:Exceptional {rating:['Exceptional']}]->(TheUpside),
+  (Harshaan)-[:Good {rating:['Good']}]->(TheUpside),
+  (Kyle)-[:Average {rating:['Average']}]->(TheUpside)
+
+CREATE (Glass:Movie_607 {title:'Glass', genre:'Drama/Sci-fi'})
+CREATE
+  (Laura)-[:Good {rating:['Good']}]->(Glass),
+  (Elyse)-[:Good {rating:['Good']}]->(Glass),
+  (Thomas)-[:Good {rating:['Good']}]->(Glass),
+  (David)-[:Average {rating:['Average']}]->(Glass),
+  (Chris)-[:Poor {rating:['Poor']}]->(Glass),
+  (Jason)-[:Exceptional {rating:['Exceptional']}]->(Glass),
+  (Harshaan)-[:NotInterested {rating:['Not Interested']}]->(Glass),
+  (Kyle)-[:NoInterested {rating:['Not Interested']}]->(Glass)
+
+
+CREATE (AvengersEndgame:Movie_607 {title:'Avengers Endgame', genre:'Action/Sci-fi'})
+CREATE
+  (Laura)-[:Good {rating:['Good']}]->(AvengersEndgame),
+  (Elyse)-[:Good {rating:['Good']}]->(AvengersEndgame),
+  (Thomas)-[:Good {rating:['Good']}]->(AvengersEndgame),
+  (David)-[:Good {rating:['Good']}]->(AvengersEndgame),
+  (Chris)-[:Exceptional {rating:['Exceptional']}]->(AvengersEndgame),
+  (Jason)-[:Exceptional {rating:['Exceptional']}]->(AvengersEndgame),
+  (Harshaan)-[:Exceptional {rating:['Exceptional']}]->(AvengersEndgame),
+  (Kyle)-[:Exceptional {rating:['Exceptional']}]->(AvengersEndgame)
+
+CREATE (BoneCollector:Movie_607 {title:'Bone Collector', genre:'Suspence/Thriller'})
+CREATE
+  (Laura)-[:Average {rating:['Average']}]->(BoneCollector),
+  (Elyse)-[:Poor {rating:['Poor']}]->(BoneCollector),
+  (Thomas)-[:Exceptional {rating:['Exceptional']}]->(BoneCollector),
+  (David)-[:Exceptional {rating:['Exceptional']}]->(BoneCollector),
+  (Chris)-[:NotInterested {rating:['Not Interested']}]->(BoneCollector),
+  (Jason)-[:Good {rating:['Good']}]->(BoneCollector),
+  (Harshaan)-[:NotInterested {rating:['Not Interested']}]->(BoneCollector),
+  (Kyle)-[:Average {rating:['Average']}]->(BoneCollector)
+```
+
+### Graph to show rating provided to movie by each reviewer. 
+
+![](https://raw.githubusercontent.com/Vishal0229/Data607/master/Week12/graph.png)
+
+
+
+###Describe the advantages and disadvantages of storing the data in a relational database vs. NoSQL database.
+
+<table>
+<tr>
+<th> </th>
+<th> Relational DB</th>
+<th> Graph DB</th>
+</tr>
+
+<tr>
+<td> Pros</td>
+<td align="top" >Expressive query language & secondary Indexes: Users should be able to access and manipulate their data in sophisticated ways to support both operational and analytical applications. Indexes play a critical role in providing efficient access to data, supported natively by the database rather than maintained in application code.
+
+Strong consistency: It is much more complex to build applications around an eventually consistent model, imposing significant work on the developer, even for the most sophisticated engineering teams.
+
+Enterprise Management and Integrations: Organizations need a database that can be secured, monitored, automated, and integrated with their existing technology infrastructure, processes, and staff, including operations teams, DBAs, and data analysts.
+
+</td>
+<td align="top">
+
+Flexible data model:Whether document,graph, key-value, or wide-column, all offer a flexible data model making it easy to store and combine data of any structure and allow dynamic modification of the schema without downtime or performance impace.
+
+Scalability and performance:This allows the database to scale out on commodity hardware deployed on-premises or in the cloud, enabling almost unlimited growth with higher throughput and lower latency than relational databases.
+
+Always-on global deployments:They are designed to run across many nodes, including replication to automatically synchronize data across servers, racks, and data centers.
+</td>
+
+<tr>
+<td> Cons</td>
+<td align="top"> Performance problems associated with re-assembling simple data structures into their more complicated real-world representations.
+
+Lack of support for complex base types, e.g., drawings.
+
+SQL is limited when accessing complex data.
+
+Knowledge of the database structure is required to create ad hoc queries.
+
+Locking mechanisms defined by RDBMSs do not allow design transactions to be supported, e.g., the "check in" and "check out" type of feature that would allow an engineer to modify a drawing over the course of several working days.
+</td>
+<td align="top"> It is a growing technology that will be mature in a few years, so, you have to bet for one and pray for it becoming successful.
+
+Most of them do not have a declarative language, and those that have it lack the capability to optimise queries in a proper way.
+
+You have to use an API.
+
+Many lack native implementations for different platforms, except for Sparksee high-performance graph database, which has native implementations for Linux, Windows, MacOS, iOS, Android and BB10.
+</td>
+</tr>
+</table>
+
+
+
+```{r}
+#To communicate with Neo4J using the REST interface
+
+graph = startGraph("http://localhost:7474/db/data/", username="neo4j", password="12345")
+
+querystring <- paste('MATCH (rev:Person_607)-[:Exceptional]->(movie1) Where rev.gender = "M" RETURN movie1.title, movie1.genre , rev.name , rev.gender , rev.age')
+
+data <- cypher(graph,querystring) 
+
+names(data)[1] <- "Movie Name"
+names(data)[2] <- "Movie Genre"
+names(data)[3] <- "Reviewer Name"
+names(data)[4] <- "Reviewer Gender"
+names(data)[5] <- "Reviewer Age"
+
+
+kable(data) %>% 
+  kable_styling(bootstrap_options = c("striped","hover","condensed","responsive"),full_width   = F,position = "left",font_size = 12) %>%
+  row_spec(0, background ="gray")
+
+```
