@@ -1,0 +1,339 @@
+---
+title: "607_FinalProject"
+author: "Samriti Malhotra"
+date: "May 11, 2019"
+output: html_document
+---
+
+# Problem statement:-
+we will use the US census data to build a model to predict if the income of any individual in the US is greater than or less than USD 50000 based on the information available about that individual in the census data, and also at world level.  [UCI site archive](http://archive.ics.uci.edu/ml/machine-learning-databases/census-income-mld/)
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+> Libaries installed for this Project.
+**data.table**
+**dplyr**
+**ggplot2**
+**plotly**
+**gtable**
+**gridExtra**
+**caret**
+**rworldmap**
+**countrycode**
+**kableExtra**
+**gbm**
+
+```{r install-library-list, eval=TRUE, include=FALSE, echo=TRUE}
+library(data.table)
+library(dplyr)
+library(ggplot2)
+library(plotly)
+library(gtable)
+library(gridExtra) 
+library(caret)
+library(rworldmap)
+library(countrycode)
+library(kableExtra)
+library(gbm)
+```
+
+## Data Exploration
+
+Download from site the census.tar.gz  [UCI site archive](http://archive.ics.uci.edu/ml/machine-learning-databases/census-income-mld/)
+have a look at the data and also the description for various variables provided on the site .              
+That will give you an idea of what the variables are and what variables we might not require and hence can exlcuded. This is one of the  crucial task as having an insight on the  data variables and based on that we can find out the response variable and what all variables we can keep for our exploratpory analysis and can be further used in our Model for prediction/classification.              
+
+We read the files using Fread function of data.table library which gives us a faster and more convenient way to read the data from files(train & test) data sets . Now we explore the data set to see what data we require and which data can be discarded **(Data Cleaning & Manipulation)**.       
+
+Using the summary function of the data sets train & test we can see that few columns are having lot of NA ,which won't help us in analysis hence it is better to remove them ("migration_msa","migration_reg","migration_within_reg" & "migration_sunbelt").         
+And similary  we remove rows for which there are any NA values which makes our data set get rid of any NA values.                    
+
+Now again subsetting and constructing our final dataset of 13 variables , then checking the unique value for our response variable (income_level) and change the values to "<=50K" for "- 50000." and simlarly change ">50k" for "50000+." which makes easier for doing analysis.Let's take a look at the severity of imbalanced classes in our data.
+
+income_level is our response/dependent variable and rest of the variables are our independent variables , next step is to do Exploratory Analsyis on numeric variables and categorical variables.            
+```{r warning=FALSE}
+trainFileName = "census-income-train.csv"; testFileName = "census-income-test.csv"
+
+
+colnames <- c("age","class_of_worker","industry_code","occupation_code","education","wage_per_hour","enrolled_in_edu_inst_lastwk",	"marital_status","major_industry_code","major_occupation_code","race","hispanic_origin","sex","member_of_labor_union","reason_for_unemployment","full_parttime_employment_stat","capital_gains","capital_losses","dividend_from_Stocks","tax_filer_status","region_of_previous_residence","state_of_previous_residence","d_household_family_stat","d_household_summary","instance_weight","migration_msa","migration_reg","migration_within_reg","live_1_year_ago","migration_sunbelt","num_person_Worked_employer","family_members_under_18","country_father","country_mother","country_self","citizenship","business_or_self_employed","fill_questionnaire_veteran_admin","veterans_benefits","weeks_worked_in_year","year","income_level")
+
+train <- fread(trainFileName,na.strings = c(""," ","?","NA",NA) ,  col.names = colnames)
+
+test <- fread(testFileName,na.strings = c(""," ","?","NA",NA) , col.names = colnames)
+
+table (complete.cases (train))
+table (complete.cases (test))
+
+# as we can clearly see that 4 columns have the maximum no of NA i.e. ("migration_msa","migration_reg","migration_within_reg" & "migration_sunbelt"), so we can delete these columns as they effectively won'ty help us in infering anything from the data.
+
+train <- train[,c(-26,-27,-28,-30)]
+myCleanTrain <- na.omit(train)
+test <- test[,c(-26,-27,-28,-30)]
+myCleanTest <- na.omit(test)
+finalTrain <-  myCleanTrain[,c(1:2,4:6,8,11,13,17:18,31,36,38)]
+finalTest <-  myCleanTest[,c(1:2,4:6,8,11,13,17:18,31,36,38)]
+
+summary(finalTrain)
+
+unique(finalTrain$income_level)
+finalTrain[,income_level := ifelse(income_level == "- 50000.","<=50K",">50K")]
+finalTest[,income_level := ifelse(income_level == "- 50000.","<=50K",">50K")]
+unique(finalTrain$income_level)
+
+#A look at the severity of imbalanced classes in our data.
+round(prop.table(table(train$income_level))*100)
+
+#segregating out data into numeric and categorical data frames for both Train data set and Test data set
+factorCols <- c(2,4,6:8,11,13)
+numericCols <- setdiff(1:13,factorCols)
+
+finalTrain[,(factorCols) := lapply(.SD, factor), .SDcols = factorCols]
+finalTrain[,(numericCols) := lapply(.SD, as.numeric), .SDcols = numericCols]
+
+finalTest[,factorCols := lapply(.SD,factor), .SDcols=factorCols]
+finalTest[,numericCols := lapply(.SD,as.numeric), .SDcols=numericCols]
+
+
+catFinalTrain <- finalTrain[,factorCols, with=FALSE]
+kable(head(catFinalTrain)) %>%
+  kable_styling(bootstrap_options = c("striped","condensed","responsive"),full_width   = F,position = "left",font_size = 12) %>%
+  row_spec(0, background ="gray")
+
+numFinalTrain <- finalTrain[,numericCols, with=FALSE]
+
+kable(head(numFinalTrain)) %>%
+  kable_styling(bootstrap_options = c("striped","condensed","responsive"),full_width   = F,position = "left",font_size = 12) %>%
+  row_spec(0, background ="gray")
+
+catFinalTest <- finalTest[,factorCols, with=FALSE]
+numFinalTest <- finalTest[,numericCols, with=FALSE]
+
+
+
+
+```
+##Exploratory Analysis:-
+
+Each of the variables is explored for distribution, variance, and predictability. We will first explore numeric variables and then do analysis on categorical variables.
+
+###Exploratory Analysis  of Numerical variables             
+
+####Age :-
+Doing summary of the Age variable , one can clearly see that age has wide range and variability, Mean and Distributions is quiet different from the income levels and hence is a good predictor factor.
+
+####Occupation code:-
+The variable occupation code has good vriability , hence it can be good predictor factor.Thus we sustain it.
+
+#####Capitol Gains & Capitol Losses:-
+Variables(Capital gain and capital losses) don't show much variance for all income levels from the plots below. However, the means show a difference for the different levels of income. So these variables can be used for prediction.
+
+####Wage per hours
+Furthermore, in classification problems, we should also plot numerical variables with dependent variable. This would help us determine the clusters (if exists) of classes "<=50k" and ">50k".
+In this we plot Wage per hour against Age for income level dependent variable.
+
+we can clearly from the below graph, that for both sections of income level (i.e. <=50K & >50k) the age group is between 25-65 yrs and also the average wage per hour for group <=50K is <2000 and even more <1000 whereas for income level >50k the average salary per hour is lies more between 1000 & 3000. Thus we can cleary see the clusters of Age against Wage per hour.
+
+ 
+
+#### Weeks worked in year:-
+In this we plot weeks_worked_in_year against Age for income level dependent variable, and can clearly see the clusters forming which gives that for Age between 25 & 65 and they work 30+ weeks, we can see the pattern in >50K income that majority of them fall in this cluster. Similary in <=50k income we can see that most of the user base has weeks per year less than 30+ and most of them fall on either of age specturen ie.e. <25 and >65 .
+
+
+
+```{r}
+#Age
+summary(finalTrain$age)
+boxplot (age ~ income_level, data = finalTrain, 
+         main = "Age vs Income levels" ,
+         xlab = "Income Levels", ylab = "Age", col = "red")
+
+ggplot(data = finalTrain, aes(x= age, y=..density..)) + geom_histogram(fill="blue",color="red",alpha = 0.5,bins =100) + geom_density()
+
+
+#occupation_code
+summary(finalTrain$occupation_code)
+ggplot(data = finalTrain, aes(x= occupation_code, y=..density..)) + geom_histogram(fill="blue",color="red",alpha = 0.5,bins =100) + geom_density()
+
+
+#wage_per_hour and age
+
+ggplot(data=finalTrain,aes(x = age, y=wage_per_hour))+geom_point(aes(col=as.factor(income_level)))+facet_grid(.~ income_level,margins = TRUE)+scale_y_continuous("wage per hour", breaks = seq(0,10000,1000))
+
+# we can clearly from the below graph, that for both sections of income level (i.e. <=50K & >50k) theage group is between 25-65 yrs and also the average wage per hour for group <=50K is <2000 and even more <1000  whereas for income level >50k the average salary per hour is lies more between 1000 & 3000.
+
+
+#Capital Gain & loss
+
+ggplot(data = finalTrain, aes(x= capital_gains, y=..density..)) + geom_histogram(fill="blue",color="red",alpha = 0.5,bins =100) + geom_density()
+
+
+nearZeroVar (finalTrain[, c("capital_gains", "capital_losses")], saveMetrics = TRUE)
+
+summary (finalTrain[ finalTrain$income_level == "<=50K", c("capital_gains", "capital_losses")])
+
+summary (finalTrain[ finalTrain$income_level == ">50K", c("capital_gains", "capital_losses")])
+
+
+
+# Looking at the values and the summary of The capital gain and capital loss variables do not show much variance for all income levels from the plots below. However, the means show a difference for the different levels of income. So these variables can be used for prediction
+
+### Weeks worked per Year & Age
+
+ggplot(data=finalTrain,aes(x = weeks_worked_in_year, y=age))+geom_point(aes(col=as.factor(income_level)))+facet_grid(.~ income_level,margins = TRUE)+scale_y_continuous("Age", breaks = seq(0,100,10))
+
+### Weeks worked per Year & wage per hour
+ggplot(data=finalTrain,aes(x = weeks_worked_in_year, y=wage_per_hour))+geom_point(aes(col=as.factor(income_level)))+facet_grid(.~ income_level,margins = TRUE)+scale_y_continuous("Wage per Hour", breaks = seq(0,100,10))
+
+
+#Based on our exploratary analysis of Weeks worked per year against Age & wage per hour for income level (<=50% & >50k) , we can clealy see that for income level >50k the average weeks worked in a year lies in a range of >30+ and goes beyond 50+ weeks whereas for income level <=50k the average weeks worked in a year lies below <40 
+
+
+
+
+
+```
+### Exploring correlation between all numerical variables
+The below correlation chows that all the numerical(continous) variables are not co-related and are independent of each other.
+
+```{r}
+correlationNumerical = cor (numFinalTrain[, c("age", "occupation_code","wage_per_hour", "capital_gains", "capital_losses", "weeks_worked_in_year")])
+diag (correlationNumerical) = 0 # ythis removes any correlation with self
+correlationNumerical
+```
+
+
+
+
+
+###Explanatory Analysis for Categorical variables                      
+Looking at all the graphs , we can safely assume that Education / Class of Workers / Marital Status / Country_self are good predictor variables . And similarly don't see much variability for variable(s) Sex/ Race and hence we won't be using these variable in our Prediction Model.
+
+
+
+```{r}
+# Education
+qplot (income_level, data = catFinalTrain, fill = education) + facet_grid (. ~ education) + theme(axis.text.x=element_text(angle  = 80,hjust = 1,size=10))
+ 
+
+ ggplot(catFinalTrain,aes(x=education,fill=income_level))+geom_bar(position = "dodge",  color="black")+scale_fill_brewer(palette = "YlGnBu")+theme(axis.text.x =element_text(angle  = 60,hjust = 1,size=10))
+ 
+### The explaoratory analysis for education vs Income levels (<=50k & >50k), clearly gives us a view that people who are bracketed in group >50k (income level) have more education the minimum they have completed thier schooling and have some sort of college done mostly people have professional degree, whereas people in income group <=50K have lesser education .
+
+ 
+ # Classs of Workers
+ 
+ 
+ ggplot(catFinalTrain,aes(x=class_of_worker,fill=income_level))+geom_bar(position = "dodge",  color="black")+scale_fill_brewer(palette = "YlOrBr")+theme(axis.text.x =element_text(angle  = 60,hjust = 1,size=10))
+
+ # As we can clearly see that majority of <=50k falls in Not in Universe which seems to be imbalanced data set as we can safely assume either user group was frustrated or not in mood to give any clear answers. So now we can either clear these particular values from the data and then redraw to see if we can use this data to infer something.
+ 
+ classWorkderDF <- catFinalTrain[ catFinalTrain$class_of_worker != "Not in universe", c("class_of_worker","income_level")]
+ 
+ summary(classWorkderDF)
+ qplot (income_level, data = classWorkderDF, fill = class_of_worker) + facet_grid (. ~ class_of_worker)
+ 
+ 
+ 
+ ### Now we can infer that most of the people work in Private sector with user earning <=50k is far more than people earning >50k and same goes in all other government jobs also.
+ 
+# Martial Status
+ 
+ qplot (income_level, data = catFinalTrain, fill = marital_status) + facet_grid (. ~ marital_status)
+
+# As nothing much can be infered from the below graph , hence using Null Hypothesis  for inference 
+  
+```
+
+Hò : There is no significant impact of the variable (MARTIAL_STATUS ) on the INCOME_LEVEL variable.
+
+Ha : There exists a significant impact of the variable (MARTIAL_STATUS) on the INCOME_LEVEL variable.
+  
+
+```{r}  
+  #creating prop table and then using chi-squaretest to calculate the p-value and then deciding which hypothesis to reject
+  myTable <- prop.table(table(catFinalTrain$marital_status,catFinalTrain$income_level),1)
+  kable(myTable) %>%
+  kable_styling(bootstrap_options = c("striped","condensed","responsive"),full_width   = F,position = "left",font_size = 12) %>%
+  row_spec(0, background ="gray")
+  chisq.test(myTable)
+  
+  
+ 
+```
+As clearly we can see that p-value is greater than significance levl (.05) hence we reject NULL Hyposthesis and can safely assume that Marital_status has significant impact on the Income_level variable.
+
+```{r}
+head(catFinalTrain)
+
+## RACE 
+summary(catFinalTrain$race)
+ qplot (income_level, data = catFinalTrain, fill = race) + facet_grid (. ~ race)
+
+
+ ###We can safely infer that majority of the user base is White and hence the maximum and minimum in both income level are from White race.And the other significant race is Black and they have maximum userbase with income level <=50K.
+ 
+ 
+#  sex
+ggplot(catFinalTrain,aes(x=sex,fill=income_level))+geom_bar(position = "dodge",  color="black")+scale_fill_brewer(palette = "YlOrBr")+theme(axis.text.x =element_text(angle  = 60,hjust = 1,size=10))
+
+
+### For the graph we can safely assume that the income_level are skewed against Females for both sections of income group(i.e. <=50k & >50k)
+
+
+#Country Self
+country_incomeDF <- select(catFinalTrain,6:7) %>%
+                      mutate(iso_code = countrycode(catFinalTrain$country_self, 'country.name', 'iso3c'))
+
+table(is.na(country_incomeDF))
+theCountries <- catFinalTrain$country_self
+###It can be clearly infered that US has maximum 
+
+
+countryCodes <- countrycode(unique(theCountries), 'country.name', 'iso3c')
+malDF <- data.frame(country_incomeDF$iso_code,
+  inc_level = country_incomeDF$income_level)
+# malDF is a data.frame with the ISO3 country names plus a variable to
+# merge to the map data
+
+
+malMap <- joinCountryData2Map(malDF, joinCode = "ISO3",  nameJoinColumn = "country_incomeDF.iso_code")
+# This will join your malDF data.frame to the country map data
+
+mapCountryData(malMap, nameColumnToPlot="inc_level", catMethod = "categorical",  missingCountryCol = gray(.8) , colourPalette = c("red", "blue") , mapTitle = "Country Vs Income Level")
+
+### Looking at the graph plotted , for world map and countries with less than <=50k & >50K , we can clearly see that US, has both significant  population of both sides of Income level and similarly India & China has significant levels of user base <=50k income level.
+```
+
+##Building a  Model(Prediction Model)
+
+Using the Boosting algorithm  for this classification modeling, as consensus data has some weak predictors.
+
+
+
+```{r eval=FALSE}
+set.seed (32323)
+training_Ctrl = trainControl(method = "cv", number = 2)
+_Fit_mdl = train(income_level ~ age + class_of_worker + occupation_code +education + wage_per_hour
+ + marital_status + capital_gains + capital_losses +
+                      country_self + weeks_worked_in_year , trControl = training_Ctrl, 
+                  method = "gbm", data = finalTrain, verbose = FALSE)
+
+
+
+
+
+
+```
+
+```{r}
+
+#confusion Matrix
+confusionMatrix (finalTrain$income_level, predict (boost_Fit_mdl, finalTrain))
+
+finalTest$predicted = predict (boost_Fit_mdl, finalTest)
+
+confusionMatrix (finalTest$income_level, finalTest$predicted)
+```
+
