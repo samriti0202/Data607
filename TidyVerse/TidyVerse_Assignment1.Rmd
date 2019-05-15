@@ -1,0 +1,80 @@
+---
+title: "TidyVerse_Assignment1"
+author: "Vishal Arora"
+date: "May 1, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(kableExtra)
+```
+# The Ask:- from this task is to show the usage of one of more tidy verse packages using the data set from wither kaggle | 538  site
+
+We got the the data from Kaggle [World Happiness Report ](https://www.kaggle.com/unsdsn/world-happiness/version/2) |
+ [Spotify Top 100 of 2018](https://www.kaggle.com/janicejung/spotify-top-100-of-2018-with-genres)
+ 
+###The world happiness has 3 csv files and spotify has one csv file, we are using the list.files function of base package to get all the csv matching the pattern and load them using the map_df function of purrr , passing map_df the read_csv function of readr library to read csv files and load them into respective Data Frames.                       
+ 
+```{r message=FALSE}
+files <- list.files(".", pattern = "[^201?]{+}.csv", full.names = TRUE)
+
+kable(files) %>% 
+  kable_styling(bootstrap_options = c("striped","hover","condensed","responsive"),full_width   = F,position = "left",font_size = 12) %>%
+  row_spec(0, background ="gray")
+happinessDF <- map_df(files[-4],read_csv) 
+spotifyDF <- map_df(files[4], read_csv)
+
+
+
+kable(head(happinessDF)) %>% 
+  kable_styling(bootstrap_options = c("striped","hover","condensed","responsive"),full_width   = F,position = "left",font_size = 12) %>%
+  row_spec(0, background ="gray")
+
+kable(head(spotifyDF)) %>% 
+  kable_styling(bootstrap_options = c("striped","hover","condensed","responsive"),full_width   = F,position = "left",font_size = 12) %>%
+  row_spec(0, background ="gray")
+
+```
+     
+                                           
+Taking spotifyDF data frame, we use split function to split the data based on column value(mode),then there are three calls to purrr functions in the below code . The first map(~ lm()) call creates a list of "lm" objects; the second map(summary) call creates a list of "summary.lm" objects; the third map_dbl() creates a vector of double-precision values.               
+
+> We can clearly the r-square values based for "MODE"  based on danceability & Energy factor for the song.                                                 
+```{r}
+
+spotifyDF %>%
+  split(.$mode) %>%
+  map(~ lm(danceability ~ energy, data = .)) %>%
+  map(summary) %>%
+  map_dbl("r.squared")
+```
+                                                                        
+Taking happinessDF data frame , and filtering out the rows based on !is.na(Region) i.e. any row which has na for column Region should be left out of the data frame, and then using the select method to subset the data frame and the using the split function of base package to split my new subset of original dataframe based on Region. Then using three calls to purrr functions in the below code , The first map(~ lm()) call creates a list of "lm" objects; the second map(summary) call creates a list of "summary.lm" objects; the third map_dbl() creates a vector of double-precision values.
+
+> We can clearly see the R2 (r-square) for various Regions based on Family and Economy(GDP per Capita).                                                     
+
+```{r}
+
+
+regionRSquare <- happinessDF %>%
+  filter(!is.na(Region)) %>%
+  select(Region,Family,`Economy (GDP per Capita)`) %>%
+  split(.$Region) %>%
+  map(~ lm(Family ~ `Economy (GDP per Capita)`, data=.)) %>%
+  map(summary) %>%
+  map_dbl("r.squared")
+  
+kable(regionRSquare) %>% 
+  kable_styling(bootstrap_options = c("striped","hover","condensed","responsive"),full_width   = F,position = "left",font_size = 12) %>%
+  row_spec(0, background ="gray")  
+
+```
+
+
+
